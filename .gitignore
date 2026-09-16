@@ -136,3 +136,13 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Настройки редактора PyCharm
+.idea/
+
+# Локальная база данных SQLite
+db.sqlite3
+
+media/
+
+
