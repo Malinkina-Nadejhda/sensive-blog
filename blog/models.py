@@ -18,20 +18,22 @@ class PostQuerySet(models.QuerySet):
     def fetch_with_comments_count(self):
         posts = list(self)
         posts_ids = [post.id for post in posts]
-        posts_with_comments = Post.objects.filter(id__in=posts_ids).annotate(
-            comments_count=Count('comments', distinct=True)
+
+        comments_count_dict = dict(
+            Post.objects.filter(id__in=posts_ids)
+            .annotate(count=Count('comments', distinct=True))
+            .values_list('id', 'count')
         )
-        count_for_id = dict(posts_with_comments.values_list('id', 'comments_count'))
         for post in posts:
-            post.comments_count = count_for_id[post.id]
+            post.comments_count = comments_count_dict[post.id]
         return posts
 
+
     def fetch_with_tags_count(self):
-        posts_with_tags_count = self.select_related('author').prefetch_related(
+        return self.select_related('author').prefetch_related(
             Prefetch('tags', queryset=Tag.objects.annotate(
                 posts_count=Count('posts', distinct=True)))
         )
-        return posts_with_tags_count
 
 
 class Post(models.Model):
