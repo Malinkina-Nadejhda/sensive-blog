@@ -52,7 +52,10 @@ def index(request):
 
 
 def post_detail(request, slug):
-    post = get_object_or_404(Post.objects.fetch_with_tags_count(), slug=slug)
+    post = get_object_or_404(
+        Post.objects.annotate(likes_amount=Count('likes')).fetch_with_tags_count(),
+        slug=slug
+    )
     comments = post.comments.select_related('author')
     serialized_comments = []
     for comment in comments:
@@ -62,8 +65,6 @@ def post_detail(request, slug):
             'author': comment.author.username,
         })
 
-    likes = post.likes.all()
-
     related_tags = post.tags.annotate(posts_count=Count('posts'))
 
     serialized_post = {
@@ -71,7 +72,7 @@ def post_detail(request, slug):
         'text': post.text,
         'author': post.author.username,
         'comments': serialized_comments,
-        'likes_amount': likes.count(),
+        'likes_amount': post.likes_amount,
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
